@@ -2,16 +2,14 @@
 
 # Binary names
 DAEMON_BINARY=bin/tumbleweed
-CLI_BINARY=bin/tumbleweed-cli
 
 all: build
 
 build:
-	@echo "Building Tumbleweed daemon and CLI..."
+	@echo "Building Tumbleweed daemon..."
 	@mkdir -p bin
 	go build -o $(DAEMON_BINARY) ./cmd/tumbleweed
-	go build -o $(CLI_BINARY) ./cmd/tumbleweed-cli
-	@echo "Binaries created in bin/"
+	@echo "Binary created in bin/"
 
 run: build
 	@echo "Starting Tumbleweed daemon..."
