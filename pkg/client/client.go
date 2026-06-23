@@ -12,6 +12,14 @@ import (
 	"tumbleweed/pkg/protocol"
 )
 
+const (
+	defaultDialTimeout       = 5 * time.Second
+	defaultMaxMessages       = 5
+	defaultAckTimeout        = 30 * time.Second
+	defaultLongPollTimeout   = 2 * time.Second
+	defaultRetryBackoffDelay = 1 * time.Second
+)
+
 // Client handles communications with the Tumbleweed message broker.
 type Client struct {
 	addr     string
@@ -31,7 +39,7 @@ func NewClient(addr string) (*Client, error) {
 }
 
 func (c *Client) connect() error {
-	conn, err := net.DialTimeout("tcp", c.addr, 5*time.Second)
+	conn, err := net.DialTimeout("tcp", c.addr, defaultDialTimeout)
 	if err != nil {
 		return fmt.Errorf("client: failed to connect to %s: %w", c.addr, err)
 	}
@@ -208,13 +216,13 @@ func (c *Client) Subscribe(ctx context.Context, topic, group, consumerID string,
 		default:
 		}
 
-		msgs, err := c.Fetch(topic, group, consumerID, 5, 30*time.Second, 2*time.Second)
+		msgs, err := c.Fetch(topic, group, consumerID, defaultMaxMessages, defaultAckTimeout, defaultLongPollTimeout)
 		if err != nil {
 			// Backoff on connection error before retrying
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
-			case <-time.After(1 * time.Second):
+			case <-time.After(defaultRetryBackoffDelay):
 				continue
 			}
 		}

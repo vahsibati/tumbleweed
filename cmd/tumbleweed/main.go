@@ -27,13 +27,15 @@ func main() {
 	fmt.Print(banner)
 	log.Println("Initializing Tumbleweed Message Broker...")
 
-	dataDir := flag.String("data-dir", "data", "directory where topic data is stored")
-	bindAddr := flag.String("bind", ":8765", "host:port to bind the TCP server to")
-	syncEvery := flag.Bool("sync-every-write", true, "call fsync on every single message publish")
-	syncInt := flag.Duration("sync-interval", 200*time.Millisecond, "duration between disk syncs if sync-every-write is false")
-	maxSegMB := flag.Int64("max-segment-mb", 64, "maximum size of a segment file in MB")
-	leaseSec := flag.Int("lease-sec", 30, "default lease visibility timeout in seconds")
-	maxRedeliv := flag.Int("max-redeliveries", 5, "maximum message redeliveries before diverting to DLQ")
+	defaultCfg := config.DefaultConfig()
+
+	dataDir := flag.String("data-dir", defaultCfg.DataDir, "directory where topic data is stored")
+	bindAddr := flag.String("bind", defaultCfg.BindAddr, "host:port to bind the TCP server to")
+	syncEvery := flag.Bool("sync-every-write", defaultCfg.SyncEveryWrite, "call fsync on every single message publish")
+	syncInt := flag.Duration("sync-interval", defaultCfg.SyncInterval, "duration between disk syncs if sync-every-write is false")
+	maxSegMB := flag.Int64("max-segment-mb", defaultCfg.MaxSegmentBytes/(1024*1024), "maximum size of a segment file in MB")
+	leaseSec := flag.Int("lease-sec", int(defaultCfg.DefaultLeaseTimeout.Seconds()), "default lease visibility timeout in seconds")
+	maxRedeliv := flag.Int("max-redeliveries", defaultCfg.MaxRedeliveries, "maximum message redeliveries before diverting to DLQ")
 
 	flag.Parse()
 

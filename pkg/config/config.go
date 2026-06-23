@@ -26,6 +26,9 @@ type Config struct {
 
 	// MaxRedeliveries is the limit of lease timeouts before a message is flagged or sent to a DLQ.
 	MaxRedeliveries int
+
+	// LeaseCheckInterval is the frequency at which the broker checks for expired leases.
+	LeaseCheckInterval time.Duration
 }
 
 // DefaultConfig returns a Config with sensible default values.
@@ -38,5 +41,6 @@ func DefaultConfig() *Config {
 		MaxSegmentBytes:     64 * 1024 * 1024, // 64 MB
 		DefaultLeaseTimeout: 30 * time.Second,
 		MaxRedeliveries:     5,
+		LeaseCheckInterval:  200 * time.Millisecond,
 	}
 }

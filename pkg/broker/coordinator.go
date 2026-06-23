@@ -581,7 +581,7 @@ func (g *ConsumerGroup) slideWindow() {
 
 // leaseExpiryLoop checks for expired leases and triggers redelivery if consumers are waiting.
 func (b *Broker) leaseExpiryLoop() {
-	ticker := time.NewTicker(200 * time.Millisecond)
+	ticker := time.NewTicker(b.cfg.LeaseCheckInterval)
 	defer ticker.Stop()
 
 	for {
