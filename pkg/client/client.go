@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"net"
+	"strings"
 	"sync/atomic"
 	"time"
 	"tumbleweed/pkg/protocol"
@@ -24,12 +25,32 @@ func NewClient(addr string) *Client {
 
 // Connect dials the TCP connection to the broker.
 func (c *Client) Connect() error {
-	conn, err := net.Dial("tcp", c.addr)
+	resolvedAddr := normalizeAddr(c.addr, ":8765")
+	conn, err := net.Dial("tcp", resolvedAddr)
 	if err != nil {
 		return err
 	}
 	c.conn = conn
 	return nil
+}
+
+// normalizeAddr ensures the address has a host and a port. If port is missing, it appends the default port.
+func normalizeAddr(addr string, defaultPort string) string {
+	if addr == "" {
+		return "localhost" + defaultPort
+	}
+	if strings.HasPrefix(addr, ":") {
+		return "localhost" + addr
+	}
+	
+	_, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		if strings.Contains(addr, ":") && !strings.Contains(addr, "[") {
+			return "[" + addr + "]" + defaultPort
+		}
+		return addr + defaultPort
+	}
+	return addr
 }
 
 // Close closes the connection to the broker.

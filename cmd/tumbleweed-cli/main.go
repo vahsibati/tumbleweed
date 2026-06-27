@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"tumbleweed/pkg/client"
@@ -46,17 +47,15 @@ func main() {
 		fmt.Fprintf(os.Stderr, "        List all active topics in the broker\n")
 	}
 
-	if len(os.Args) < 2 {
+	// Rearrange arguments to support global flags specified after the subcommand
+	rearranged := rearrangeArgs(os.Args[1:])
+
+	if len(rearranged) == 0 {
 		fs.Usage()
 		os.Exit(0)
 	}
 
-	// We must support flags either before or after the command.
-	// Typically flags are provided before command, or command first.
-	// Standard flag library can parse global flags if we do it first.
-	// But command is required.
-	// Let's parse global flags starting from index 1.
-	if err := fs.Parse(os.Args[1:]); err != nil {
+	if err := fs.Parse(rearranged); err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing flags: %v\n", err)
 		os.Exit(1)
 	}
@@ -240,4 +239,32 @@ func main() {
 		fs.Usage()
 		os.Exit(1)
 	}
+}
+
+// rearrangeArgs moves global flags (-addr, --addr) and their values to the front of args
+func rearrangeArgs(args []string) []string {
+	var globalFlags []string
+	var otherArgs []string
+
+	i := 0
+	for i < len(args) {
+		arg := args[i]
+		if arg == "-addr" || arg == "--addr" {
+			if i+1 < len(args) {
+				globalFlags = append(globalFlags, arg, args[i+1])
+				i += 2
+			} else {
+				globalFlags = append(globalFlags, arg)
+				i++
+			}
+		} else if strings.HasPrefix(arg, "-addr=") || strings.HasPrefix(arg, "--addr=") {
+			globalFlags = append(globalFlags, arg)
+			i++
+		} else {
+			otherArgs = append(otherArgs, arg)
+			i++
+		}
+	}
+
+	return append(globalFlags, otherArgs...)
 }
