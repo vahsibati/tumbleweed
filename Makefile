@@ -2,6 +2,7 @@
 
 # Binary names
 DAEMON_BINARY=bin/tumbleweed
+CLI_BINARY=bin/tumbleweed-cli
 
 # Docker settings
 DOCKER_IMAGE=tumbleweed
@@ -13,7 +14,9 @@ build:
 	@echo "Building Tumbleweed daemon..."
 	@mkdir -p bin
 	go build -o $(DAEMON_BINARY) ./cmd/tumbleweed
-	@echo "Binary created in bin/"
+	@echo "Building Tumbleweed CLI client..."
+	go build -o $(CLI_BINARY) ./cmd/tumbleweed-cli
+	@echo "Binaries created in bin/"
 
 run: build
 	@echo "Starting Tumbleweed daemon..."

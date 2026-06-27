@@ -676,6 +676,18 @@ func (t *Topic) checkExpiredLeases() {
 	}
 }
 
+// ListTopics returns a list of all active topic names.
+func (b *Broker) ListTopics() []string {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	names := make([]string, 0, len(b.topics))
+	for name := range b.topics {
+		names = append(names, name)
+	}
+	return names
+}
+
 // Close closes the broker.
 func (b *Broker) Close() error {
 	b.mu.Lock()

@@ -105,3 +105,20 @@ func TestFetchResponseMarshalUnmarshal(t *testing.T) {
 		}
 	}
 }
+
+func TestListTopicsResponseMarshalUnmarshal(t *testing.T) {
+	resp := &ListTopicsResponse{
+		Topics: []string{"topic-a", "topic-b", "another-one"},
+	}
+
+	data := resp.Marshal()
+	unmarshaled, err := UnmarshalListTopicsResponse(data)
+	if err != nil {
+		t.Fatalf("failed to unmarshal list topics response: %v", err)
+	}
+
+	if !reflect.DeepEqual(resp.Topics, unmarshaled.Topics) {
+		t.Errorf("expected topics %v, got %v", resp.Topics, unmarshaled.Topics)
+	}
+}
+

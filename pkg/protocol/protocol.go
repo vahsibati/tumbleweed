@@ -14,6 +14,7 @@ const (
 	TypeReqAck         byte = 0x04
 	TypeReqNack        byte = 0x05
 	TypeReqCreateTopic byte = 0x06
+	TypeReqListTopics  byte = 0x07
 
 	TypeRespPong        byte = 0x81
 	TypeRespProduce     byte = 0x82
@@ -21,6 +22,7 @@ const (
 	TypeRespAck         byte = 0x84
 	TypeRespNack        byte = 0x85
 	TypeRespCreateTopic byte = 0x86
+	TypeRespListTopics  byte = 0x87
 	TypeRespError       byte = 0xFF
 )
 
@@ -459,3 +461,52 @@ func UnmarshalErrorResponse(body []byte) (*ErrorResponse, error) {
 	message := string(body[4 : 4+msgLen])
 	return &ErrorResponse{Code: code, Message: message}, nil
 }
+
+// ListTopicsResponse
+type ListTopicsResponse struct {
+	Topics []string
+}
+
+func (r *ListTopicsResponse) Marshal() []byte {
+	totalSize := 4 // count
+	for _, t := range r.Topics {
+		totalSize += 2 + len(t)
+	}
+
+	buf := make([]byte, totalSize)
+	binary.BigEndian.PutUint32(buf[0:4], uint32(len(r.Topics)))
+
+	idx := 4
+	for _, t := range r.Topics {
+		tb := []byte(t)
+		binary.BigEndian.PutUint16(buf[idx:idx+2], uint16(len(tb)))
+		copy(buf[idx+2:idx+2+len(tb)], tb)
+		idx += 2 + len(tb)
+	}
+
+	return buf
+}
+
+func UnmarshalListTopicsResponse(body []byte) (*ListTopicsResponse, error) {
+	if len(body) < 4 {
+		return nil, errors.New("malformed ListTopicsResponse")
+	}
+	count := int(binary.BigEndian.Uint32(body[0:4]))
+	topics := make([]string, count)
+
+	idx := 4
+	for i := 0; i < count; i++ {
+		if len(body) < idx+2 {
+			return nil, errors.New("malformed ListTopicsResponse")
+		}
+		tLen := int(binary.BigEndian.Uint16(body[idx : idx+2]))
+		if len(body) < idx+2+tLen {
+			return nil, errors.New("malformed ListTopicsResponse")
+		}
+		topics[i] = string(body[idx+2 : idx+2+tLen])
+		idx += 2 + tLen
+	}
+
+	return &ListTopicsResponse{Topics: topics}, nil
+}
+

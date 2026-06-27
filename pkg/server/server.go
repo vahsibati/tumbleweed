@@ -184,6 +184,15 @@ func (s *Server) processFrame(f *protocol.Frame) *protocol.Frame {
 			ReqID: f.ReqID,
 		}
 
+	case protocol.TypeReqListTopics:
+		topics := s.broker.ListTopics()
+		resp := &protocol.ListTopicsResponse{Topics: topics}
+		return &protocol.Frame{
+			Type:  protocol.TypeRespListTopics,
+			ReqID: f.ReqID,
+			Body:  resp.Marshal(),
+		}
+
 	default:
 		return makeErrorFrame(f.ReqID, protocol.ErrCodeUnknown, "unknown request type")
 	}
